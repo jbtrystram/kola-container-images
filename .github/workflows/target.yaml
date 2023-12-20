@@ -1,0 +1,36 @@
+name: "Build target container"
+permissions:
+  contents: read
+
+on:
+  push:
+    paths:
+      - target/**
+      - .github/workflows/target.yaml
+  schedule:
+    - cron:  '0 0 * * MON'
+
+env:
+  PUSH_DESTINATION: "quay.io/jbtrystram/targetcli"
+  CONTEXT: "target"
+
+
+jobs:
+  build-and-publish-image:
+    name: Build image
+    runs-on: ubuntu-22.04
+
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build and push container
+        uses: coreos/actions-lib/build-container@main
+        with:
+          arches: 'amd64 arm64 ppc64le s390x'
+          context: '${{ env.CONTEXT }}'
+          credentials: ${{ secrets.QUAY_AUTH }}
+          file: ${{ env.CONTEXT }}/Containerfile
+          push: ${{ env.PUSH_DESTINATION }}
+          pr-arches: amd64
